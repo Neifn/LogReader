@@ -1,0 +1,7 @@
+Package: logreader
+Version: 1.0-1
+Section: base
+Priority: optional
+Architecture: all
+Maintainer: neifn <alexandrshah@yandex.ru>
+Description: Simple program which archives logs and sends them to another server
