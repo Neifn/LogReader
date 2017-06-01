@@ -1,5 +1,5 @@
 # LogReader
-To install LogReader use init file in the root of git project directory
+To install LogReader run `sudo ./init.sh` file in the root of git project directory 
 Then use commands `service logreader start` to start the application,
 `service logreader stop` to stop it, `service logreader restart` to restart and
 `service logreader --help` to get some additional information.
