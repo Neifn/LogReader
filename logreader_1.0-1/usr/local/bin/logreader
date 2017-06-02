@@ -3,7 +3,7 @@
 LOGREADERPID=/var/run/logreader/logreader.pid
 LOGREADERLOG=/var/log/logreader.log
 LOGREADERCONF=/etc/logreader.conf
-STOPCHECK=/tmp/logreader/stopcheck
+LOCKDIR=$( dirname $LOGREADERPID )
 
 logreader()
 {
@@ -12,13 +12,14 @@ logreader()
   CHECKPERIOD=$( echo $1 | sed 's/.*\,\(.*\)\;.*/\1/' )
   SSHLOGDIR=$( echo $1 | sed 's/.*\;\(.*\)/\1/' )
   ARCHIVE=$( basename $PATHTOLOG )
-  PATHDIR=$( dirname $PATHTOLOG )
+  PATHDIR=$( dirname $PATHTOLOG ) 
+  
   while true
   do
+    touch ${LOCKDIR}/${BASHPID}.lock
     CURRENTTIME=$( date +"%Y%m%d%H%M" )
     if [ -s $PATHTOLOG ]
     then
-      touch $STOPCHECK
       mv $PATHTOLOG ${PATHTOLOG}-${CURRENTTIME}
       tar -czf ${PATHDIR}/${ARCHIVE}-${CURRENTTIME}.tar.gz -C ${PATHDIR} ${ARCHIVE}-${CURRENTTIME}
       rm ${PATHTOLOG}-${CURRENTTIME}
@@ -29,12 +30,12 @@ logreader()
       ssh $SERVERIP rm ${SSHLOGDIR}/${ARCHIVE}-${CURRENTTIME}.tar.gz
       echo "${CURRENTTIME} archive ${PATHDIR}/${ARCHIVE}-${CURRENTTIME}.tar.gz copied to remote client ${SERVERIP}" >> $LOGREADERLOG
       rm $PATHTOLOG
-      rm $STOPCHECK
     else
       echo "${CURRENTTIME} No logs are present for ${PATHTOLOG}" >> $LOGREADERLOG
       ssh $SERVERIP echo "${CURRENTTIME} No logs are present for ${PATHTOLOG}" > ${ARCHIVE}-${CURRENTTIME}
     fi
-      sleep $(( CHECKPERIOD * 60 ))
+    sleep $(( CHECKPERIOD * 60 ))
+    rm ${LOCKDIR}/${BASHPID}.lock
   done
 }
 
@@ -65,8 +66,6 @@ logstart()
 
 logstop ()
 {
-  until [ -f $STOPCHECK ]
-  do
   if ! [ -f $LOGREADERPID ]
   then
     echo "application is not running"
@@ -76,12 +75,15 @@ logstop ()
   do
     if ps -eo pid | grep $line
     then
+      while [ -f ${LOCKDIR}/${line}.lock ]
+      do
+        sleep 2  
+      done
       kill $line
     fi
   done
   rm -rf $LOGREADERPID
   echo "application is stoped"
-  done
 }
 
 case $1 in
