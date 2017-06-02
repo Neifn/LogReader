@@ -34,8 +34,8 @@ logreader()
       echo "${CURRENTTIME} No logs are present for ${PATHTOLOG}" >> $LOGREADERLOG
       ssh $SERVERIP echo "${CURRENTTIME} No logs are present for ${PATHTOLOG}" > ${ARCHIVE}-${CURRENTTIME}
     fi
-    sleep $(( CHECKPERIOD * 60 ))
     rm ${LOCKDIR}/${BASHPID}.lock
+    sleep $(( CHECKPERIOD * 60 )
   done
 }
 
